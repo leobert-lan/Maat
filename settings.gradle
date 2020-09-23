@@ -1,2 +1,3 @@
+include ':maat'
 include ':app'
 rootProject.name = "Maat"
