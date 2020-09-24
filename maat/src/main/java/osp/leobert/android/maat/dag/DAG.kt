@@ -15,10 +15,10 @@ class DAG<T>(val nameOf: (T) -> String, val printChunkMax: Int) {
     //记录两份网络节点,使用空间换时间,提升反向查询效率
 
     //网络初始化,x_k,y_k
-    private val xMapMap: MutableMap<T, MutableMap<T, Int>> = HashMap()
+    private val edgesByStart: MutableMap<T, MutableMap<T, Int>> = HashMap()
 
     //网络初始化,y_k,x_k
-    private val yMapMap: MutableMap<T, MutableMap<T, Int>> = HashMap()
+    private val edgesByEnd: MutableMap<T, MutableMap<T, Int>> = HashMap()
 
     //回环路径
     val loopbackList: MutableList<String> = LinkedList()
@@ -27,32 +27,32 @@ class DAG<T>(val nameOf: (T) -> String, val printChunkMax: Int) {
     val deepPathList: MutableList<MutableList<T>> = LinkedList()
 
     fun addEdge(edge: Edge<T>) {
-        if (!xMapMap.containsKey(edge.from)) {
-            xMapMap[edge.from] = hashMapOf()
+        if (!edgesByStart.containsKey(edge.from)) {
+            edgesByStart[edge.from] = hashMapOf()
         }
-        xMapMap[edge.from]?.put(edge.to, edge.degree)
+        edgesByStart[edge.from]?.put(edge.to, edge.degree)
 
-        if (!yMapMap.containsKey(edge.to)) {
-            yMapMap[edge.to] = HashMap()
+        if (!edgesByEnd.containsKey(edge.to)) {
+            edgesByEnd[edge.to] = HashMap()
         }
-        yMapMap[edge.to]?.put(edge.from, edge.degree)
+        edgesByEnd[edge.to]?.put(edge.from, edge.degree)
     }
 
     private val allPoint: Set<T>
         get() = HashSet<T>().apply {
-            this.addAll(xMapMap.keys)
-            this.addAll(yMapMap.keys)
+            this.addAll(edgesByStart.keys)
+            this.addAll(edgesByEnd.keys)
         }
 
 
     fun getEdgeContainsPoint(point: T, type: Type): List<Edge<T>> {
         val linePointList: MutableList<Edge<T>> = ArrayList()
         if (type == Type.X) {
-            xMapMap[point]?.forEach {
+            edgesByStart[point]?.forEach {
                 linePointList.add(Edge(point, it.key, it.value))
             }
         } else {
-            yMapMap[point]?.forEach {
+            edgesByEnd[point]?.forEach {
                 linePointList.add(Edge(it.key, point, it.value))
             }
         }
@@ -107,7 +107,7 @@ class DAG<T>(val nameOf: (T) -> String, val printChunkMax: Int) {
             info.append(String.format("%-" + placeholder + "s|", x.let(nameOf)))
 
             for (y in allSet) {
-                val linePoints: Map<T, Int>? = xMapMap[x]
+                val linePoints: Map<T, Int>? = edgesByStart[x]
                 var degree: Int? = 0
                 if (linePoints != null && linePoints[y] != null) {
                     degree = linePoints[y]
@@ -126,6 +126,7 @@ fun main() {
     dag.addEdge(Edge("a", "c", 1))
     dag.addEdge(Edge("c", "d", 1))
     dag.addEdge(Edge("b", "d", 1))
+    dag.addEdge(Edge("a", "e", 1))
     dag.debugMatrix().let {
         println(it)
     }
