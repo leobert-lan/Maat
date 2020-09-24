@@ -1,68 +1,137 @@
 package osp.leobert.android.maat.dag
 
+import java.lang.RuntimeException
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.collections.HashSet
+
 
 /**
  * <p><b>Package:</b> osp.leobert.android.maat.dag </p>
  * <p><b>Classname:</b> DAG </p>
  * Created by leobert on 2020/9/23.
  */
-class DAG<T>(val nameOf: (T) -> String) {
+class DAG<T>(val nameOf: (T) -> String, val printChunkMax: Int) {
     //记录两份网络节点,使用空间换时间,提升反向查询效率
 
     //网络初始化,x_k,y_k
-    private val xMapMap: Map<T, Map<String, String>> = HashMap()
+    private val xMapMap: MutableMap<T, MutableMap<T, Int>> = HashMap()
 
     //网络初始化,y_k,x_k
-    private val yMapMap: Map<T, Map<String, String>> = HashMap()
+    private val yMapMap: MutableMap<T, MutableMap<T, Int>> = HashMap()
 
     //回环路径
-    private val loopbackList: List<String> = LinkedList()
+    val loopbackList: MutableList<String> = LinkedList()
 
     //节点深度路径
-    private val deepPathList: List<List<String>> = LinkedList()
+    val deepPathList: MutableList<MutableList<T>> = LinkedList()
 
-    fun getAllPoint(): Set<T> {
-        val allSet1 = xMapMap.keys
-        val allSet2 = yMapMap.keys
-        val allSet: MutableSet<T> = HashSet()
-        allSet.addAll(allSet1)
-        allSet.addAll(allSet2)
-        return allSet
+    fun addEdge(edge: Edge<T>) {
+        if (!xMapMap.containsKey(edge.from)) {
+            xMapMap[edge.from] = hashMapOf()
+        }
+        xMapMap[edge.from]?.put(edge.to, edge.degree)
+
+        if (!yMapMap.containsKey(edge.to)) {
+            yMapMap[edge.to] = HashMap()
+        }
+        yMapMap[edge.to]?.put(edge.from, edge.degree)
     }
 
-    fun show() {
-        val placeholder = 3
+    private val allPoint: Set<T>
+        get() = HashSet<T>().apply {
+            this.addAll(xMapMap.keys)
+            this.addAll(yMapMap.keys)
+        }
+
+
+    fun getEdgeContainsPoint(point: T, type: Type): List<Edge<T>> {
+        val linePointList: MutableList<Edge<T>> = ArrayList()
+        if (type == Type.X) {
+            xMapMap[point]?.forEach {
+                linePointList.add(Edge(point, it.key, it.value))
+            }
+        } else {
+            yMapMap[point]?.forEach {
+                linePointList.add(Edge(it.key, point, it.value))
+            }
+        }
+        return linePointList
+    }
+
+    private fun debugPathInfo(pathList: MutableList<T>):String {
+       return pathList.map { it.let(nameOf) }.toString()
+    }
+
+    fun recursive(startPoint: T, pathList: MutableList<T>) {
+        if (pathList.contains(startPoint)) {
+            loopbackList.add("${debugPathInfo(pathList)}->${startPoint.let(nameOf)}")
+            return
+        }
+        pathList.add(startPoint)
+        val linePoint = getEdgeContainsPoint(startPoint, Type.X)
+        if (linePoint.isEmpty()) {
+            val descList: ArrayList<T> = ArrayList(pathList.size)
+            pathList.forEach { path -> descList.add(path) }
+            deepPathList.add(descList)
+        }
+        linePoint.forEach {
+            recursive(it.to, pathList)
+        }
+
+        pathList.remove(startPoint)
+    }
+
+    fun debugMatrix(): String {
+        val placeholder = printChunkMax
+
         val placeholderString = StringBuilder()
         for (i in 0 until placeholder) {
             placeholderString.append("-")
         }
-        val allSet: Set<T> = getAllPoint() //获取所有的点,用于遍历
-        print(String.format("%-" + placeholder + "s", ""))
-        print(" ")
+        val info = StringBuilder()
+        val allSet: Set<T> = allPoint
+
+        info.append(String.format("%-" + placeholder + "s", "")).append(" ")
         for (x in allSet) {
-            print(String.format("%-" + placeholder + "s", x))
+            info.append(String.format("%-" + placeholder + "s", x.let(nameOf)))
         }
-        println()
-        print(String.format("%-" + placeholder + "s", "X\\Y"))
-        print(" ")
+        info.append("\n").append(String.format("%-" + placeholder + "s", "X\\Y")).append(" ")
         for (ignored in allSet) {
-            print(placeholderString)
+            info.append(placeholderString)
         }
-        println()
+
+        info.append("\n")
+
         for (x in allSet) {
-            print(String.format("%-" + placeholder + "s|", x))
+            info.append(String.format("%-" + placeholder + "s|", x.let(nameOf)))
+
             for (y in allSet) {
-                val linePoints: Map<String, String?>? =
-                    xMapMap.get(x)
-                var point: String? = "0"
+                val linePoints: Map<T, Int>? = xMapMap[x]
+                var degree: Int? = 0
                 if (linePoints != null && linePoints[y] != null) {
-                    point = linePoints[y]
+                    degree = linePoints[y]
                 }
-                print(String.format("%-" + placeholder + "s", point))
+                info.append(String.format("%-" + placeholder + "s", (degree ?: 0).toString()))
             }
-            println()
+            info.append("\n")
         }
+        return info.toString()
     }
+}
+
+fun main() {
+    val dag = DAG<String>(nameOf = { it }, printChunkMax = 3)
+    dag.addEdge(Edge("a", "b", 1))
+    dag.addEdge(Edge("a", "c", 1))
+    dag.addEdge(Edge("c", "d", 1))
+    dag.addEdge(Edge("b", "d", 1))
+    dag.debugMatrix().let {
+        println(it)
+    }
+    dag.recursive("a", arrayListOf())
+    if (dag.loopbackList.isNotEmpty()) {
+        throw RuntimeException("cycle exist:"+dag.loopbackList)
+    }
+    println(dag.deepPathList)
 }
