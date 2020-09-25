@@ -1,7 +1,8 @@
 package osp.leobert.android.maat
 
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
@@ -18,18 +19,19 @@ abstract class JOB {
 
     abstract val dependsOn: List<String>
 
-    abstract val scope: CoroutineScope
+    abstract val dispatcher: CoroutineDispatcher
 
 
     internal fun runInit(maat: Maat) {
-        scope.launch {
+        MainScope().launch {
 
             flow {
                 init(maat)
                 emit(true)
             }
+                .flowOn(dispatcher)
                 .catch {
-                    maat.onJobFailed(this@JOB)
+                    maat.onJobFailed(this@JOB,it)
                 }.flowOn(Dispatchers.Main)
                 .collect {
                     maat.onJobSuccess(this@JOB)

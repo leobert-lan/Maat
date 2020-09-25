@@ -7,4 +7,4 @@ import java.lang.RuntimeException
  * <p><b>Classname:</b> MaatException </p>
  * Created by leobert on 2020/9/24.
  */
-class MaatException(msg:String):RuntimeException(msg)
+class MaatException(msg: String, throws: Throwable? = null) : RuntimeException(msg, throws)

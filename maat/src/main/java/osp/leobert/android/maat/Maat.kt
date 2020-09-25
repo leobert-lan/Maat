@@ -2,7 +2,7 @@ package osp.leobert.android.maat
 
 import android.content.Context
 import androidx.annotation.MainThread
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import osp.leobert.android.maat.JobChunk.Companion.append
 import osp.leobert.android.maat.JobChunk.Companion.info
@@ -20,14 +20,17 @@ import kotlin.collections.set
  * <p><b>Classname:</b> Maat </p>
  * Created by leobert on 2020/9/23.
  */
-class Maat(val application: Context, private val printChunkMax: Int,
-           private val logger: Logger
+class Maat(
+    val application: Context, private val printChunkMax: Int,
+    private val logger: Logger, private val callback: Callback? = null
 ) {
 
     abstract class Logger {
         abstract val enable: Boolean
         abstract fun log(msg: String)
     }
+
+    class Callback(val onSuccess: (Maat) -> Unit, val onFailure: (Maat, JOB, Throwable) -> Unit)
 
     companion object {
 
@@ -74,8 +77,7 @@ class Maat(val application: Context, private val printChunkMax: Int,
     private val startJob = object : JOB() {
         override val uniqueKey: String = "start"
         override val dependsOn: List<String> = emptyList()
-        override val scope: CoroutineScope =
-            CoroutineScope(Dispatchers.Main + kotlinx.coroutines.Job())
+        override val dispatcher: CoroutineDispatcher = Dispatchers.Main
 
         override fun init(maat: Maat) {
         }
@@ -134,37 +136,35 @@ class Maat(val application: Context, private val printChunkMax: Int,
         if (logger.enable)
             logger.log("init order: ${currentJobChunk?.info()}")
 
-//        createJobChunk().let {
-//            println(it.info())
-//            print("sort:")
-//
-//            while (it.haveNext()) {
-//                print(it.next()?.uniqueKey + ", ")
-//            }
-//        }
         if (currentJobChunk?.haveNext() == true) {
             currentJobChunk?.next()?.runInit(this)
         } else {
-
+            throw MaatException("none jobs!!!")
         }
 
     }
 
     @MainThread
-    fun onJobFailed(job: JOB) {
+    fun onJobFailed(job: JOB, throws: Throwable) {
+        if (logger.enable)
+            logger.log("onJobSuccess:${job.uniqueKey}, called on MainThread:${MaatUtil.isMainThread()}")
 
+        callback?.onFailure?.invoke(this, job, throws)
     }
 
     @MainThread
-    fun onJobSuccess(job: JOB) {
+    internal fun onJobSuccess(job: JOB) {
+        if (logger.enable)
+            logger.log("onJobSuccess:${job.uniqueKey}, called on MainThread:${MaatUtil.isMainThread()}")
         if (currentJobChunk?.haveNext() == true) {
             currentJobChunk?.next()?.runInit(this)
         } else {
-
+            logger.takeIf { it.enable }?.log("all jobs finished")
+            callback?.onSuccess?.invoke(this)
         }
     }
 
-    fun createJobChunk(): JobChunk {
+    private fun createJobChunk(): JobChunk {
         return dag.bfs()
     }
 }

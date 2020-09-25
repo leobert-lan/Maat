@@ -4,9 +4,8 @@ import android.os.Looper
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -37,8 +36,7 @@ class ExampleInstrumentedTest {
         maat.append(object : JOB() {
             override val uniqueKey: String = "a"
             override val dependsOn: List<String> = emptyList()
-            override val scope: CoroutineScope =
-                CoroutineScope(Dispatchers.IO + Job())
+            override val dispatcher: CoroutineDispatcher = Dispatchers.IO
 
             override fun init(maat: Maat) {
                 Log.e(
@@ -54,8 +52,7 @@ class ExampleInstrumentedTest {
         }).append(object : JOB() {
             override val uniqueKey: String = "b"
             override val dependsOn: List<String> = arrayListOf("a")
-            override val scope: CoroutineScope =
-                CoroutineScope(Dispatchers.Main + Job())
+            override val dispatcher: CoroutineDispatcher = Dispatchers.Main
 
             override fun init(maat: Maat) {
                 Log.e(
@@ -71,8 +68,7 @@ class ExampleInstrumentedTest {
         }).append(object : JOB() {
             override val uniqueKey: String = "c"
             override val dependsOn: List<String> = arrayListOf("a")
-            override val scope: CoroutineScope =
-                CoroutineScope(Dispatchers.IO + Job())
+            override val dispatcher: CoroutineDispatcher = Dispatchers.IO
 
             override fun init(maat: Maat) {
                 Log.e(
@@ -88,8 +84,7 @@ class ExampleInstrumentedTest {
         }).append(object : JOB() {
             override val uniqueKey: String = "d"
             override val dependsOn: List<String> = arrayListOf("a", "b", "c")
-            override val scope: CoroutineScope =
-                CoroutineScope(Dispatchers.Main + Job())
+            override val dispatcher: CoroutineDispatcher = Dispatchers.Main
 
             override fun init(maat: Maat) {
                 Log.e(
