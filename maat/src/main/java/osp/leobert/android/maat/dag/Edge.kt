@@ -5,5 +5,5 @@ package osp.leobert.android.maat.dag
  * <p><b>Classname:</b> Edge </p>
  * Created by leobert on 2020/9/23.
  */
-class Edge<T>(val from: T,val to: T,val degree: Int = 1) {
+class Edge<T>(val from: T,val to: T,val weight: Int = 1) {
 }

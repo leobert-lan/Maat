@@ -19,22 +19,34 @@ class JobChunk private constructor() {
                 this@append.nextChunk = this
             }
         }
+
+        fun JobChunk.info(): String {
+            return buildString {
+                append(this@info.jobs).append(", ")
+                this@info.nextChunk?.info()?.let { append(it) }
+            }
+        }
     }
 
-    private val jobs: LinkedHashSet<Job> = LinkedHashSet()
+    private val jobs: LinkedHashSet<JOB> = LinkedHashSet()
 
     private var current: JobChunk? = null
     var nextChunk: JobChunk? = null
 
     @Synchronized
-    fun haveNext(): Boolean = jobs.isNotEmpty() || nextChunk?.haveNext() == true
+    fun haveNext(): Boolean = current?.run { haveNext(this) } ?: false
+
+
+    private fun haveNext(chunk: JobChunk): Boolean {
+        return chunk.jobs.isNotEmpty() || (chunk.nextChunk?.run { haveNext(this) } ?: false)
+    }
 
     @Synchronized
-    fun next(): Job? {
+    fun next(): JOB? {
         synchronized(this) {
             if (haveNext()) {
-                if (current?.jobs?.isNullOrEmpty() == true) {
-                    current = nextChunk
+                if (current?.jobs.isNullOrEmpty()) {
+                    current = current?.nextChunk
                 }
                 return current?.jobs?.firstOrNull()?.apply {
                     current?.jobs?.remove(this)
@@ -44,8 +56,13 @@ class JobChunk private constructor() {
         }
     }
 
-    internal fun addJobs(jobs: List<Job>): JobChunk {
+    internal fun addJobs(jobs: List<JOB>): JobChunk {
         this.jobs.addAll(jobs)
+        return this
+    }
+
+    internal fun addJob(job: JOB): JobChunk {
+        this.jobs.add(job)
         return this
     }
 }

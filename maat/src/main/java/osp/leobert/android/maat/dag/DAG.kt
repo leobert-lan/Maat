@@ -1,6 +1,5 @@
 package osp.leobert.android.maat.dag
 
-import java.lang.RuntimeException
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
@@ -12,6 +11,7 @@ import kotlin.collections.HashSet
  * Created by leobert on 2020/9/23.
  */
 class DAG<T>(val nameOf: (T) -> String, val printChunkMax: Int) {
+
     //记录两份网络节点,使用空间换时间,提升反向查询效率
 
     //网络初始化,x_k,y_k
@@ -26,16 +26,22 @@ class DAG<T>(val nameOf: (T) -> String, val printChunkMax: Int) {
     //节点深度路径
     val deepPathList: MutableList<MutableList<T>> = LinkedList()
 
+    val inDegreeCache = HashMap<T, Int>()
+
     fun addEdge(edge: Edge<T>) {
         if (!edgesByStart.containsKey(edge.from)) {
             edgesByStart[edge.from] = hashMapOf()
         }
-        edgesByStart[edge.from]?.put(edge.to, edge.degree)
+        edgesByStart[edge.from]?.put(edge.to, edge.weight)
 
         if (!edgesByEnd.containsKey(edge.to)) {
             edgesByEnd[edge.to] = HashMap()
         }
-        edgesByEnd[edge.to]?.put(edge.from, edge.degree)
+
+        inDegreeCache[edge.to] = (inDegreeCache[edge.to] ?: 0).plus(edge.weight)
+        inDegreeCache[edge.from] = inDegreeCache[edge.from]?:0
+
+        edgesByEnd[edge.to]?.put(edge.from, edge.weight)
     }
 
     private val allPoint: Set<T>
@@ -59,8 +65,8 @@ class DAG<T>(val nameOf: (T) -> String, val printChunkMax: Int) {
         return linePointList
     }
 
-    private fun debugPathInfo(pathList: MutableList<T>):String {
-       return pathList.map { it.let(nameOf) }.toString()
+    private fun debugPathInfo(pathList: MutableList<T>): String {
+        return pathList.map { it.let(nameOf) }.toString()
     }
 
     fun recursive(startPoint: T, pathList: MutableList<T>) {
@@ -119,20 +125,20 @@ class DAG<T>(val nameOf: (T) -> String, val printChunkMax: Int) {
         return info.toString()
     }
 }
-
-fun main() {
-    val dag = DAG<String>(nameOf = { it }, printChunkMax = 3)
-    dag.addEdge(Edge("a", "b", 1))
-    dag.addEdge(Edge("a", "c", 1))
-    dag.addEdge(Edge("c", "d", 1))
-    dag.addEdge(Edge("b", "d", 1))
-    dag.addEdge(Edge("a", "e", 1))
-    dag.debugMatrix().let {
-        println(it)
-    }
-    dag.recursive("a", arrayListOf())
-    if (dag.loopbackList.isNotEmpty()) {
-        throw RuntimeException("cycle exist:"+dag.loopbackList)
-    }
-    println(dag.deepPathList)
-}
+//
+//fun main() {
+//    val dag = DAG<String>(nameOf = { it }, printChunkMax = 3)
+//    dag.addEdge(Edge("a", "b", 1))
+//    dag.addEdge(Edge("a", "c", 1))
+//    dag.addEdge(Edge("c", "d", 1))
+//    dag.addEdge(Edge("b", "d", 1))
+//    dag.addEdge(Edge("a", "e", 1))
+//    dag.debugMatrix().let {
+//        println(it)
+//    }
+//    dag.recursive("a", arrayListOf())
+//    if (dag.loopbackList.isNotEmpty()) {
+//        throw RuntimeException("cycle exist:" + dag.loopbackList)
+//    }
+//    println(dag.deepPathList)
+//}
