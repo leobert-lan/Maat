@@ -26,9 +26,9 @@ class ExampleInstrumentedTest {
             override val enable: Boolean = true
 
 
-            override fun log(msg: String) {
+            override fun log(msg: String, throws: Throwable?) {
 //                println(msg)
-                Log.d("maat", msg)
+                Log.d("maat", msg, throws)
             }
 
         })

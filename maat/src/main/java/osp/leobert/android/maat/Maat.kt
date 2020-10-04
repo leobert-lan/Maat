@@ -27,12 +27,38 @@ class Maat(
 
     abstract class Logger {
         abstract val enable: Boolean
-        abstract fun log(msg: String)
+        abstract fun log(msg: String, throws: Throwable? = null)
     }
 
     class Callback(val onSuccess: (Maat) -> Unit, val onFailure: (Maat, JOB, Throwable) -> Unit)
 
     companion object {
+        private var sInstance: Maat? = null
+
+        @Synchronized
+        fun init(
+            application: Context, printChunkMax: Int,
+            logger: Logger, callback: Callback? = null
+        ): Maat {
+
+            synchronized(Maat::class) {
+                val tmp = sInstance
+                if (tmp == null) {
+                    synchronized(Maat::class) {
+                        val s = Maat(application, printChunkMax, logger, callback)
+                        sInstance = s
+                        return s
+                    }
+                } else {
+                    return tmp
+                }
+            }
+        }
+
+        @Synchronized
+        fun getDefault(): Maat {
+            return sInstance ?: throw MaatException("must call init at first")
+        }
 
 
         private fun DAG<JOB>.bfs(): JobChunk {
@@ -147,7 +173,10 @@ class Maat(
     @MainThread
     fun onJobFailed(job: JOB, throws: Throwable) {
         if (logger.enable)
-            logger.log("onJobSuccess:${job.uniqueKey}, called on MainThread:${MaatUtil.isMainThread()}")
+            logger.log(
+                "onJobFailed:${job.uniqueKey}, called on MainThread:${MaatUtil.isMainThread()}",
+                throws
+            )
 
         callback?.onFailure?.invoke(this, job, throws)
     }
@@ -166,5 +195,9 @@ class Maat(
 
     private fun createJobChunk(): JobChunk {
         return dag.bfs()
+    }
+
+    fun hasFinished(): Boolean {
+        return currentJobChunk?.haveNext() != true
     }
 }

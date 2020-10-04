@@ -14,17 +14,20 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val maat = Maat(this, 6, object : Maat.Logger() {
-            override val enable: Boolean = true
+        val maat = Maat.init(application = this, printChunkMax = 6,
+            logger = object : Maat.Logger() {
+                override val enable: Boolean = true
 
 
-            override fun log(msg: String) {
-//                println(msg)
-                Log.d("maat", msg)
-            }
+                override fun log(msg: String, throws: Throwable?) {
+                    Log.d("maat", msg, throws)
+                }
 
-        })
-        print(Thread.currentThread().name)
+            }, callback = Maat.Callback(onSuccess = {}, onFailure = { maat, job, throwable ->
+
+            })
+        )
+
         maat.append(object : JOB() {
             override val uniqueKey: String = "a"
             override val dependsOn: List<String> = emptyList()
@@ -35,6 +38,8 @@ class MainActivity : AppCompatActivity() {
                     "maat",
                     "run:" + uniqueKey + " isMain:" + (Looper.getMainLooper() == Looper.myLooper())
                 )
+                //test exception
+//                throw NullPointerException("just a test")
             }
 
             override fun toString(): String {
