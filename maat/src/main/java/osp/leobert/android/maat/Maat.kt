@@ -60,6 +60,17 @@ class Maat(
             return sInstance ?: throw MaatException("must call init at first")
         }
 
+        @Synchronized
+        @Throws(MaatException::class)
+        fun release() {
+            if (getDefault().hasFinished()) {
+                sInstance = null
+                return
+            }
+
+            throw MaatException("maat has not finished it's job")
+        }
+
 
         private fun DAG<JOB>.bfs(): JobChunk {
 
