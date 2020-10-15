@@ -75,13 +75,13 @@ class DAG<T>(val nameOf: (T) -> String, val printChunkMax: Int) {
             return
         }
         pathList.add(startPoint)
-        val linePoint = getEdgeContainsPoint(startPoint, Type.X)
-        if (linePoint.isEmpty()) {
+        val edgesFromStartPoint = getEdgeContainsPoint(startPoint, Type.X)
+        if (edgesFromStartPoint.isEmpty()) {
             val descList: ArrayList<T> = ArrayList(pathList.size)
             pathList.forEach { path -> descList.add(path) }
             deepPathList.add(descList)
         }
-        linePoint.forEach {
+        edgesFromStartPoint.forEach {
             recursive(it.to, pathList)
         }
 
