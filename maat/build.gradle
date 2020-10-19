@@ -62,17 +62,56 @@ ext {
 apply from: '../bintrayv1.gradle'
 
 
-//apply from: '../installv1.gradle'
-apply plugin: 'maven'
-uploadArchives() {
-    repositories {
-        mavenDeployer {
-            repository(url: MAVEN_LOCAL_PATH)
-            pom.project {
-                groupId GROUP_ID
-                artifactId ARTIFACT_ID
-                version VERSION_NAME
-            }
-        }
-    }
-}
+apply from: '../installv1.gradle'
+//apply plugin: 'maven'
+//uploadArchives() {
+//    repositories {
+//        mavenDeployer {
+//            repository(url: MAVEN_LOCAL_PATH)
+//            pom.project {
+//                groupId GROUP_ID
+//                artifactId ARTIFACT_ID
+//                version VERSION_NAME
+//            }
+//        }
+//    }
+//}
+
+//task createPom {
+//    apply plugin: 'maven'
+//    description "create Pom"
+//
+//    pom {
+//        project {
+//            packaging 'aar'
+//            groupId 'osp.leobert.android'
+//            artifactId artifact
+//
+//            // Add your description here
+//            name libraryName
+//            description libraryDescription
+//            url siteUrl
+//
+//            // Set your license
+//            licenses {
+//                license {
+//                    name licenseName
+//                    url licenseUrl
+//                }
+//            }
+//            developers {
+//                developer {
+//                    id developerId
+//                    name developerName
+//                    email developerEmail
+//                }
+//            }
+//            scm {
+//                connection gitUrl
+//                developerConnection gitUrl
+//                url siteUrl
+//
+//            }
+//        }
+//    }.writeTo("${rootProject.buildDir}/sdk_out_temp/common/pom.xml")
+//}
