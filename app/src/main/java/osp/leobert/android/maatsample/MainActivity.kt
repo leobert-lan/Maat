@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         maat.append(object : JOB() {
             override val uniqueKey: String = "a"
             override val dependsOn: List<String> = emptyList()
-            override val dispatcher: CoroutineDispatcher = Dispatchers.IO /* + Job()*/
+            override val dispatcher: CoroutineDispatcher = Dispatchers.IO
 
             override fun init(maat: Maat) {
                 Log.e(
