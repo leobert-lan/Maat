@@ -22,7 +22,8 @@ import kotlin.collections.set
  */
 class Maat(
     val application: Context, private val printChunkMax: Int,
-    private val logger: Logger, private val callback: Callback? = null
+    internal val logger: Logger, internal val callback: Callback? = null,
+    internal val dispatcher: Dispatcher = JobDispatcher()
 ) {
 
     abstract class Logger {
@@ -36,16 +37,19 @@ class Maat(
         private var sInstance: Maat? = null
 
         @Synchronized
+        @JvmOverloads
         fun init(
             application: Context, printChunkMax: Int,
-            logger: Logger, callback: Callback? = null
+            logger: Logger, callback: Callback? = null,
+            dispatcher: Dispatcher = JobDispatcher()
+
         ): Maat {
 
             synchronized(Maat::class) {
                 val tmp = sInstance
                 if (tmp == null) {
                     synchronized(Maat::class) {
-                        val s = Maat(application, printChunkMax, logger, callback)
+                        val s = Maat(application, printChunkMax, logger, callback, dispatcher)
                         sInstance = s
                         return s
                     }
@@ -173,12 +177,7 @@ class Maat(
         if (logger.enable)
             logger.log("init order: ${currentJobChunk?.info()}")
 
-        if (currentJobChunk?.haveNext() == true) {
-            currentJobChunk?.next()?.runInit(this)
-        } else {
-            throw MaatException("none jobs!!!")
-        }
-
+        dispatcher.start(this, currentJobChunk)
     }
 
     @MainThread
@@ -194,14 +193,7 @@ class Maat(
 
     @MainThread
     internal fun onJobSuccess(job: JOB) {
-        if (logger.enable)
-            logger.log("onJobSuccess:${job.uniqueKey}, called on MainThread:${MaatUtil.isMainThread()}")
-        if (currentJobChunk?.haveNext() == true) {
-            currentJobChunk?.next()?.runInit(this)
-        } else {
-            logger.takeIf { it.enable }?.log("all jobs finished")
-            callback?.onSuccess?.invoke(this)
-        }
+        dispatcher.dispatchOnJobSuccess(this, currentJobChunk, job)
     }
 
     private fun createJobChunk(): JobChunk {

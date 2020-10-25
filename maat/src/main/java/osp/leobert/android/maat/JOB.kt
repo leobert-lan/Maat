@@ -21,17 +21,23 @@ abstract class JOB {
 
     abstract val dispatcher: CoroutineDispatcher
 
+    private var finishEmitter: FinishEmitter? = null
+
+    open val emitSuccessAfterInitBlock = true
+
 
     internal fun runInit(maat: Maat) {
         MainScope().launch {
 
-            flow {
+            flow<Boolean> {
+                if (!emitSuccessAfterInitBlock)
+                    finishEmitter = FinishEmitter(maat)
                 init(maat)
-                emit(true)
-            }
-                .flowOn(dispatcher)
+                if (emitSuccessAfterInitBlock)
+                    emit(true)
+            }.flowOn(dispatcher)
                 .catch {
-                    maat.onJobFailed(this@JOB,it)
+                    maat.onJobFailed(this@JOB, it)
                 }.flowOn(Dispatchers.Main)
                 .collect {
                     maat.onJobSuccess(this@JOB)
@@ -39,7 +45,32 @@ abstract class JOB {
         }
     }
 
+    protected fun emitSuccessAfterInit() {
+        MainScope().launch {
+            finishEmitter?.emit()
+        }
+    }
+
     abstract fun init(maat: Maat)
 
+    inner class FinishEmitter(val maat: Maat) {
+        var hasEmit = false
+
+        @Synchronized
+        fun emit() {
+            if (hasEmit) {
+                Maat.getDefault().logger.log(
+                    "not allowed to emit success twice!",
+                    Throwable("from $uniqueKey")
+                )
+                return
+            }
+            hasEmit = true
+
+            maat.onJobSuccess(this@JOB)
+            finishEmitter = null
+        }
+
+    }
 
 }

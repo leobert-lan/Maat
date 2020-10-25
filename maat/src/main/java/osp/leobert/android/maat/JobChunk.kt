@@ -33,6 +33,24 @@ class JobChunk private constructor() {
     private var current: JobChunk? = null
     var nextChunk: JobChunk? = null
 
+    private val onHandlingJobsKey: HashSet<String> = hashSetOf()
+
+    @Synchronized
+    fun markOnHandling(key:String) {
+        current?.onHandlingJobsKey?.add(key)
+    }
+
+    @Synchronized
+    fun markHandled(key:String) {
+        current?.onHandlingJobsKey?.remove(key)
+    }
+
+    @Synchronized
+    fun haveNextInChunk(): Boolean = current?.jobs?.isNotEmpty() ?: false
+
+    @Synchronized
+    fun hasHandingJobsInChunk(): Boolean = current?.onHandlingJobsKey?.isNotEmpty() ?: false
+
     @Synchronized
     fun haveNext(): Boolean = current?.run { haveNext(this) } ?: false
 
@@ -54,6 +72,12 @@ class JobChunk private constructor() {
             }
             return null
         }
+    }
+
+    @Synchronized
+    fun move2NextChunk(): JobChunk? {
+        current = current?.nextChunk
+        return current
     }
 
     internal fun addJobs(jobs: List<JOB>): JobChunk {
