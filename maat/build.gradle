@@ -45,7 +45,7 @@ dependencies {
 
 def MAVEN_LOCAL_PATH = uri('../../local_repo')
 def ARTIFACT_ID = 'maat'
-def VERSION_NAME = '1.0.0'
+def VERSION_NAME = '1.1.0'
 def GROUP_ID = 'osp.leobert.android'
 
 ext {
@@ -77,41 +77,3 @@ apply from: '../installv1.gradle'
 //    }
 //}
 
-//task createPom {
-//    apply plugin: 'maven'
-//    description "create Pom"
-//
-//    pom {
-//        project {
-//            packaging 'aar'
-//            groupId 'osp.leobert.android'
-//            artifactId artifact
-//
-//            // Add your description here
-//            name libraryName
-//            description libraryDescription
-//            url siteUrl
-//
-//            // Set your license
-//            licenses {
-//                license {
-//                    name licenseName
-//                    url licenseUrl
-//                }
-//            }
-//            developers {
-//                developer {
-//                    id developerId
-//                    name developerName
-//                    email developerEmail
-//                }
-//            }
-//            scm {
-//                connection gitUrl
-//                developerConnection gitUrl
-//                url siteUrl
-//
-//            }
-//        }
-//    }.writeTo("${rootProject.buildDir}/sdk_out_temp/common/pom.xml")
-//}
