@@ -1,6 +1,6 @@
 package osp.leobert.android.maat
 
-import android.content.Context
+import android.app.Application
 import androidx.annotation.MainThread
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +21,7 @@ import kotlin.collections.set
  * Created by leobert on 2020/9/23.
  */
 class Maat(
-    val application: Context, private val printChunkMax: Int,
+    val application: Application, private val printChunkMax: Int,
     internal val logger: Logger, internal val callback: Callback? = null,
     internal val dispatcher: Dispatcher = JobDispatcher()
 ) {
@@ -39,7 +39,7 @@ class Maat(
         @Synchronized
         @JvmOverloads
         fun init(
-            application: Context, printChunkMax: Int,
+            application: Application, printChunkMax: Int,
             logger: Logger, callback: Callback? = null,
             dispatcher: Dispatcher = JobDispatcher()
 

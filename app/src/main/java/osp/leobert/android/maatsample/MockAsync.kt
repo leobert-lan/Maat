@@ -15,7 +15,7 @@ object MockAsync {
     fun init(callback: () -> Unit) {
         CoroutineScope(Dispatchers.Main + Job()).launch {
             withContext(Dispatchers.Default) {
-                Log.e("maat", "模拟子线程异步初始化，回调主线程通知加载完成,isMain:${MaatUtil.isMainThread()},${System.currentTimeMillis()}")
+                Log.e("maat", "模拟子线程异步初始化，isMain:${MaatUtil.isMainThread()},${System.currentTimeMillis()}")
                 delay(200)
             }
             Log.e("maat", "模拟加载完成，主线程通知加载完成,isMain:${MaatUtil.isMainThread()},${System.currentTimeMillis()}")
