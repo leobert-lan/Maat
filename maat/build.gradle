@@ -45,7 +45,7 @@ dependencies {
 
 def MAVEN_LOCAL_PATH = uri('../../local_repo')
 def ARTIFACT_ID = 'maat'
-def VERSION_NAME = '1.1.0'
+def VERSION_NAME = '1.1.1'
 def GROUP_ID = 'osp.leobert.android'
 
 ext {
