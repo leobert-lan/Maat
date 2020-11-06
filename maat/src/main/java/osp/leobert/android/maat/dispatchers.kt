@@ -6,7 +6,6 @@ import osp.leobert.android.maat.JobChunk.Companion.info
  * <p><b>Package:</b> osp.leobert.android.maat </p>
  * <p><b>Project:</b> Maat </p>
  * <p><b>Classname:</b> dispatchers </p>
- * <p><b>Description:</b> TODO </p>
  * Created by leobert on 2020/10/24.
  */
 
@@ -71,20 +70,27 @@ class JobChuckDispatcher : Dispatcher() {
 
                 null
             } else {
-                chunk.move2NextChunk()?.let {cc->
+                //fix:https://github.com/leobert-lan/Maat/issues/1 at 2020-11-06 release version 1.1.1; affect 1.1.0
+                chunk.move2NextChunk()
+                    .let { _ -> //if it (current chunk) is null means all job have bean handled successfully
 
-                    if (chunk.haveNext()) { //我们可以置信不会存在空chunk
-                        while (chunk.haveNextInChunk()) {
-                            chunk.next()?.let {
-                                currentJobChunk.markOnHandling(it.uniqueKey)
-                                it.runInit(maat)
+                        // we can believe that if a chunk is not null, it must not be empty.
+                        // And, the local param chunk is the original chunk-header, it can delegate
+                        // the visitation of the chunk current handing. thus, if chunk.haveNext() return true,
+                        // means still existing jobs to execute (in the current chunk), otherwise, all jobs have bean handled.
+
+                        if (chunk.haveNext()) {
+                            while (chunk.haveNextInChunk()) {
+                                chunk.next()?.let {
+                                    currentJobChunk.markOnHandling(it.uniqueKey)
+                                    it.runInit(maat)
+                                }
                             }
+                        } else {
+                            maat.logger.takeIf { it.enable }?.log("all jobs finished")
+                            maat.callback?.onSuccess?.invoke(maat)
                         }
-                    } else {
-                        maat.logger.takeIf { it.enable }?.log("all jobs finished")
-                        maat.callback?.onSuccess?.invoke(maat)
                     }
-                }
             }
         }
     }

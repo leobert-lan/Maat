@@ -26,10 +26,13 @@ class App : Application() {
 
 
                 override fun log(msg: String, throws: Throwable?) {
-                    Log.d("maat", "\n"+msg, throws)
+                    Log.d("maat", "\n" + msg, throws)
                 }
 
-            }, callback = Maat.Callback(onSuccess = {}, onFailure = { maat, job, throwable ->
+            }, callback = Maat.Callback(onSuccess = {
+                Log.d("maat", "all job success")
+            }, onFailure = { maat, job, throwable ->
+
 
             }), dispatcher = JobChuckDispatcher()
         )
