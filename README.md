@@ -1,6 +1,9 @@
 # Maat
 Maat是秩序之神，在之前参与开发的组件化项目JIMU中，一直被要求添加按序加载组件Component的功能，于是开始开发这个Android组件加载库，他可以单独使用，并不一定依赖于JIMU项目
 
+相关博客[组件化：代码隔离也难不倒组件的按序初始化 ](https://juejin.im/post/6884492604370026503/)
+JIMU项目请看[这里](https://github.com/mqzhangw/JIMU)
+
 ## 最新版本：
 
 version|Maat
